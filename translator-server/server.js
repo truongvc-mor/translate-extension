@@ -1,77 +1,8 @@
-// require('dotenv').config();
-// const WebSocket = require('ws');
-// const { createClient } = require('@deepgram/sdk');
-// const axios = require('axios');
-
-// const wss = new WebSocket.Server({ port: process.env.PORT || 3000 });
-// const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
-
-// console.log(`Server đang chạy tại ws://localhost:${process.env.PORT || 3000}`);
-
-// // Hàm dịch ngôn ngữ (Sử dụng Google Translate API miễn phí dành cho việc test)
-// async function translateText(text, targetLang = 'vi') {
-//     try {
-//         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
-//         const response = await axios.get(url);
-//         return response.data[0][0][0];
-//     } catch (error) {
-//         console.error("Lỗi dịch thuật:", error.message);
-//         return text;
-//     }
-// }
-
-// wss.on('connection', (ws) => {
-//     console.log('Extension đã kết nối!');
-
-//     // Cấu hình kết nối Realtime tới Deepgram
-//     const deepgramLive = deepgram.listen.live({
-//         model: 'nova-2', // Model AI mới và thông minh nhất của Deepgram
-//         language: 'en',  // Ngôn ngữ gốc của cuộc họp (Tiếng Anh)
-//         smart_format: true,
-//         encoding: 'linear16',
-//         sample_rate: 16000,
-//     });
-
-//     deepgramLive.on('open', () => {
-//         console.log('Đã kết nối với Deepgram AI.');
-//     });
-
-//     deepgramLive.on('Results', async (data) => {
-//         const transcript = data.channel.alternatives[0].transcript;
-//         if (transcript.trim().length > 0 && data.is_final) {
-//             console.log('Tiếng Anh:', transcript);
-            
-//             // Dịch sang Tiếng Việt
-//             const translatedText = await translateText(transcript, 'vi');
-//             console.log('Tiếng Việt:', translatedText);
-
-//             // Gửi kết quả về lại Browser Extension
-//             ws.send(JSON.stringify({
-//                 original: transcript,
-//                 translated: translatedText
-//             }));
-//         }
-//     });
-
-//     deepgramLive.on('error', (error) => console.error('Lỗi Deepgram:', error));
-
-//     // Nhận luồng âm thanh (Audio Stream) từ Extension và đẩy thẳng cho Deepgram
-//     ws.on('message', (message) => {
-//         if (deepgramLive.getReadyState() === 1) { // 1 = OPEN
-//             deepgramLive.send(message);
-//         }
-//     });
-
-//     ws.on('close', () => {
-//         console.log('Extension đã ngắt kết nối.');
-//         deepgramLive.finish();
-//     });
-// });
-
 require('dotenv').config();
 const WebSocket = require('ws');
 const { createClient } = require('@deepgram/sdk');
 const axios = require('axios');
+const url = require('url');
 
 const wss = new WebSocket.Server({ port: process.env.PORT || 3000 });
 const deepgram = createClient(process.env.DEEPGRAM_API_KEY); // Giữ nguyên cú pháp v4
@@ -89,13 +20,20 @@ async function translateText(text, targetLang = 'vi') {
     }
 }
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
     console.log('Extension đã kết nối!');
+
+    const parameters = url.parse(req.url, true).query;
+    const sourceLang = parameters.sl || 'en';
+    const targetLang = parameters.tl || 'vi';
+
+    console.log(`[Kết nối mới] Source: ${sourceLang} | Target: ${targetLang}`);
 
     const deepgramLive = deepgram.listen.live({
         model: 'nova-2',
-        language: 'en',
+        language: sourceLang,
         smart_format: true,
+        punctuate: true,
         encoding: 'linear16',
         sample_rate: 16000,
         interim_results: true, // HIỆN CHỮ NGAY LẬP TỨC KHI ĐANG NÓI
@@ -114,8 +52,8 @@ wss.on('connection', (ws) => {
 
         if (data.is_final) {
             // ĐÃ NÓI XONG 1 CÂU -> Đi dịch và gửi bản Final
-            console.log('Chốt câu (Tiếng Anh):', transcript);
-            const translatedText = await translateText(transcript, 'vi');
+            console.log(`Chốt câu (${sourceLang}):`, transcript);
+            const translatedText = await translateText(transcript, targetLang);
             
             ws.send(JSON.stringify({ 
                 type: 'final', 
