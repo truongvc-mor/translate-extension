@@ -3,15 +3,21 @@
   "name": "Realtime Meeting Translator",
   "version": "1.0",
   "description": "Phiên dịch realtime cho Google Meet, Zoom, Teams",
-  "permissions": ["tabCapture", "activeTab", "scripting", "offscreen"],
-  "host_permissions":["<all_urls>"],
+  "permissions": ["tabCapture", "activeTab", "scripting", "offscreen", "storage"],
+  "host_permissions": ["<all_urls>"],
   "action": { "default_popup": "popup.html" },
   "background": { "service_worker": "background.js" },
-  "content_scripts":[
+  "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"],
       "css": ["style.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["processor.js"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
