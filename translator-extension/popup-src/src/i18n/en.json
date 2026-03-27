@@ -1,0 +1,24 @@
+{
+  "app": {
+    "name": "VoxaBridge"
+  },
+  "lang": {
+    "source": "Source language",
+    "target": "Translate to"
+  },
+  "languages": {
+    "en": "English",
+    "vi": "Vietnamese",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "zh": "Chinese"
+  },
+  "status": {
+    "idle": "Ready",
+    "active": "Translating"
+  },
+  "btn": {
+    "start": "Start Translation",
+    "stop": "Stop"
+  }
+}
