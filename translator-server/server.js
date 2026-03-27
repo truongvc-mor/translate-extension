@@ -13,7 +13,7 @@ async function translateText(text, targetLang = 'vi') {
     try {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
         const response = await axios.get(url);
-        return response.data[0][0][0];
+        return response.data[0].map(segment => segment[0]).join('');
     } catch (error) {
         console.error("Lỗi dịch thuật:", error.message);
         return text;
@@ -36,9 +36,13 @@ wss.on('connection', (ws, req) => {
         punctuate: true,
         encoding: 'linear16',
         sample_rate: 16000,
-        interim_results: true, // HIỆN CHỮ NGAY LẬP TỨC KHI ĐANG NÓI
-        endpointing: 500       // CHỐT CÂU NHANH SAU KHI DỪNG 0.5 GIÂY
+        interim_results: true,
+        endpointing: 800       // tăng lên 800ms để ít bị split mid-sentence hơn
     });
+
+    // Buffer tích lũy text từ nhiều is_final segments cho đến khi câu hoàn chỉnh
+    let accumulatedText = '';
+    const MAX_WORDS = 40; // fallback: dịch khi câu quá dài dù chưa có dấu câu
 
     deepgramLive.on('open', () => {
         console.log('Đã kết nối với Deepgram AI.');
@@ -46,26 +50,33 @@ wss.on('connection', (ws, req) => {
 
     deepgramLive.on('Results', async (data) => {
         const transcript = data.channel.alternatives[0].transcript;
-        
-        // Bỏ qua nếu không có chữ nào
+
         if (!transcript || transcript.trim().length === 0) return;
 
+        const send = (payload) => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(payload));
+            }
+        };
+
         if (data.is_final) {
-            // ĐÃ NÓI XONG 1 CÂU -> Đi dịch và gửi bản Final
-            console.log(`Chốt câu (${sourceLang}):`, transcript);
-            const translatedText = await translateText(transcript, targetLang);
-            
-            ws.send(JSON.stringify({ 
-                type: 'final', 
-                original: transcript, 
-                translated: translatedText 
-            }));
+            accumulatedText += (accumulatedText ? ' ' : '') + transcript;
+
+            const trimmed = accumulatedText.trim();
+            const endsWithPunctuation = /[.?!]$/.test(trimmed);
+            const wordCount = trimmed.split(/\s+/).length;
+
+            if (endsWithPunctuation || wordCount >= MAX_WORDS) {
+                accumulatedText = '';
+                console.log(`Câu hoàn chỉnh (${sourceLang}):`, trimmed);
+                const translatedText = await translateText(trimmed, targetLang);
+                send({ type: 'final', original: trimmed, translated: translatedText });
+            } else {
+                send({ type: 'interim', original: trimmed });
+            }
         } else {
-            // ĐANG NÓI DỞ -> Gửi ngay tiếng Anh về để hiện lên màn hình cho mượt
-            ws.send(JSON.stringify({ 
-                type: 'interim', 
-                original: transcript 
-            }));
+            const display = accumulatedText ? accumulatedText + ' ' + transcript : transcript;
+            send({ type: 'interim', original: display });
         }
     });
 
@@ -79,6 +90,7 @@ wss.on('connection', (ws, req) => {
 
     ws.on('close', () => {
         console.log('Extension đã ngắt kết nối.');
+        accumulatedText = '';
         deepgramLive.finish();
     });
 });

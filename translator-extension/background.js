@@ -60,15 +60,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
 
     } else if (request.action === "forwardSubtitle") {
-        // Gửi chữ xuống tab. Cần catch lỗi lỡ người dùng đóng mất tab đó rồi.
-        if (currentTabId) {
-            chrome.tabs.sendMessage(currentTabId, { 
-                action: "showSubtitle", 
-                payload: request.payload 
-            }).catch((err) => {
-                console.log("Tab đã đóng hoặc reload, tiến hành tắt dịch.");
-                isTranslating = false; // Reset trạng thái
-            });
-        }
+        const { original, translated, type } = request.payload;
+        // Broadcast to popup (Vue store listens for showSubtitle with isFinal flag)
+        chrome.runtime.sendMessage({
+            action: "showSubtitle",
+            original,
+            translated,
+            isFinal: type === 'final'
+        }).catch(() => {}); // Popup might not be open, ignore error
     }
 });

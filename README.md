@@ -1,111 +1,135 @@
-# 🌐 Realtime Meeting Translator (Trợ lý Phiên dịch Thời gian thực)
+# 🌐 VoxaBridge Translate
 
-Một tiện ích mở rộng (Chrome Extension) mạnh mẽ giúp bạn **nhận diện giọng nói và phiên dịch trực tiếp (Real-time)** âm thanh phát ra từ bất kỳ tab trình duyệt nào (Google Meet, Zoom Web, Microsoft Teams, YouTube, v.v.). 
-
-Hệ thống sử dụng **Deepgram AI** để nhận diện giọng nói siêu tốc và **Google Translate API** để dịch thuật ngôn ngữ, sau đó hiển thị phụ đề (Subtitle) đè lên màn hình video của bạn.
-
-
-## ✨ Tính năng nổi bật
-
-- 🎙️ **Thu âm trực tiếp từ Tab:** Bắt âm thanh chuẩn xác từ tab đang mở mà không bị lẫn tạp âm từ micro ngoài.
-- ⚡ **Siêu tốc (Low Latency):** Sử dụng Deepgram Nova-2 (Model STT nhanh nhất hiện nay) kết hợp WebSocket để stream âm thanh.
-- 🌍 **Tùy chọn Ngôn ngữ Đa dạng:** Hỗ trợ thay đổi Ngôn ngữ nguồn (người đang nói) và Ngôn ngữ đích (ngôn ngữ bạn muốn đọc).
-- 🔤 **Phụ đề trực quan:** Hiển thị phụ đề thông minh trên màn hình (Có cả câu tạm thời - interim và câu chốt - final).
-- 🛡️ **Tối ưu tài nguyên:** Sử dụng Chrome Offscreen API & AudioWorklet chuẩn Google Manifest V3 giúp không làm nặng trình duyệt.
-
-
-## 🏗️ Kiến trúc Hệ thống
-
-Dự án được chia làm 2 phần hoạt động song song:
-1. **Frontend (Chrome Extension):** Chịu trách nhiệm tạo giao diện (Popup), thu âm thanh từ Tab (Offscreen + TabCapture), nén thành chuẩn PCM 16-bit và vẽ phụ đề lên video (Content Script).
-2. **Backend (Node.js Server):** Nhận luồng âm thanh qua WebSocket, đẩy lên Deepgram AI để lấy văn bản, gọi API Dịch thuật và trả kết quả về cho Extension.
-
-
-## 📋 Yêu cầu cài đặt (Prerequisites)
-
-Để chạy được dự án này, máy tính của bạn cần có:
-1. Trình duyệt **Google Chrome** (hoặc Edge, Brave...).
-2. **Node.js** (Khuyến nghị bản v16 trở lên).
-3. **Deepgram API Key** (Đăng ký tài khoản miễn phí tại [Deepgram Console](https://console.deepgram.com/) và tạo API Key, bạn sẽ được tặng credit miễn phí).
-
-
-## 🚀 Hướng dẫn Cài đặt & Chạy dự án
-
-### Bước 1: Khởi động Server Node.js (Backend)
-
-1. Mở Terminal / Command Prompt và di chuyển vào thư mục server:
-   ```bash
-   cd TranslateExtension/translator-server
-   ```
-2. Cài đặt các thư viện cần thiết:
-   ```bash
-   npm install
-   ```
-3. Tạo một file có tên là `.env` nằm cùng chỗ với file `server.js` và dán API Key của Deepgram vào như sau:
-   ```env
-   DEEPGRAM_API_KEY=dán_api_key_của_bạn_vào_đây
-   PORT=3000
-   ```
-4. Chạy Server:
-   ```bash
-   node server.js
-   ```
-   *(Nếu thấy terminal báo: `Server đang chạy tại ws://localhost:3000` là thành công).*
-
-### Bước 2: Cài đặt Chrome Extension (Frontend)
-
-1. Mở trình duyệt Chrome, gõ vào thanh địa chỉ: `chrome://extensions/`
-2. Bật chế độ **Developer mode (Chế độ dành cho nhà phát triển)** ở góc trên cùng bên phải.
-![alt text](./imgs/img%201.png)
-3. Bấm vào nút **Load unpacked (Tải tiện ích đã giải nén)** ở góc trên cùng bên trái.
-![alt text](./imgs/img%202.png)
-4. Chọn thư mục `translator-extension` trong mã nguồn của dự án.
-5. *(Tùy chọn)* Bấm vào biểu tượng "Mảnh ghép" trên thanh công cụ Chrome và **Ghim (Pin)** Extension ra ngoài để tiện sử dụng.
+Chrome Extension dịch thuật thời gian thực — thu âm từ bất kỳ tab nào (YouTube, Google Meet, Zoom...), nhận diện giọng nói bằng **Deepgram AI**, dịch qua **Google Translate** và hiển thị trực tiếp trong popup.
 
 ---
 
-## 💻 Hướng dẫn Sử dụng
+## ✨ Tính năng
 
-1. Đảm bảo **Server Node.js đang chạy** ở dưới nền.
-2. Mở một trang web bạn muốn dịch (Ví dụ: [Một video Tiếng Anh trên YouTube](https://www.youtube.com/) hoặc phòng họp Google Meet).
-3. Bấm vào biểu tượng Extension của dự án.
-4. Chọn:
-   - **Nói:** Ngôn ngữ gốc của video (Ví dụ: Tiếng Anh).
-   - **Dịch ra:** Ngôn ngữ bạn muốn đọc (Ví dụ: Tiếng Việt).
-5. Bấm nút **BẮT ĐẦU DỊCH**.
-6. Quay lại màn hình video, bạn sẽ thấy phụ đề màu vàng xuất hiện ở giữa màn hình ngay khi có người nói.
-7. Khi không dùng nữa, mở lại Popup và bấm **DỪNG LẠI**.
+- 🎙️ **Thu âm trực tiếp từ Tab** — không lẫn tạp âm micro ngoài
+- ⚡ **Độ trễ thấp** — Deepgram Nova-2 + WebSocket streaming
+- 🌍 **Đa ngôn ngữ** — EN, VI, JA, KO, ZH
+- 🪟 **Hiển thị trong Popup** — translation hiện ngay trong extension panel, không che nội dung trang
+- 🧠 **Dịch câu hoàn chỉnh** — tích lũy context trước khi dịch, tránh cắt giữa câu
 
 ---
 
-## 🛠️ Cấu trúc Thư mục
+## 🏗️ Kiến trúc
 
-```text
-TranslateExtension/
-├── translator-extension/        # (Mã nguồn Chrome Extension)
-│   ├── background.js            # Điều phối trạng thái và kết nối
-│   ├── content.js               # Vẽ phụ đề lên màn hình trang web
-│   ├── manifest.json            # Cấu hình quyền và thông tin Extension
-│   ├── offscreen.html & .js     # Chạy ngầm để lấy âm thanh (Bypass giới hạn của Chrome)
-│   ├── popup.html & .js         # Giao diện người dùng
-│   ├── processor.js             # AudioWorklet chuyển đổi âm thanh sang PCM
-│   └── style.css                # CSS làm đẹp cho phụ đề
-│
-└── translator-server/           # (Mã nguồn Node.js Server)
-    ├── .env                     # (Bạn tự tạo) Chứa API Key
-    ├── package.json             # Danh sách thư viện (ws, axios, @deepgram/sdk)
-    └── server.js                # Websocket Server xử lý STT và Translate
+```
+[Chrome Extension]                    [Node.js Server]
+  popup (Vue)  ──start/stop──►  background.js (service worker)
+                                       │
+                                       ├─ tabCapture → streamId
+                                       └─ offscreen.js
+                                              │
+                                       AudioWorklet (PCM 16-bit)
+                                              │
+                                       WebSocket ──────────────► server.js
+                                                                   ├─ Deepgram STT
+                                                                   └─ Google Translate
+                                                                         │
+                               popup ◄── chrome.runtime.sendMessage ◄───┘
 ```
 
 ---
 
-## ⚠️ Lưu ý & Khắc phục sự cố
+## 📋 Yêu cầu
 
-- **Không hiện chữ trên màn hình?**
-  👉 Hãy chắc chắn bạn đã tải lại trang web (Nhấn `F5`) sau khi cài đặt Extension. Content Script cần trang được tải mới để chèn code hiển thị phụ đề.
-- **Báo lỗi `Connection refused` hoặc không bắt được chữ?**
-  👉 Kiểm tra xem Node.js server đã được bật chưa, kiểm tra terminal xem có lỗi API Key của Deepgram (hết tiền/sai key) không.
-- **Đã sửa code nhưng Extension không nhận code mới?**
-  👉 Chrome Extension cache file rất sâu. Mỗi lần sửa code `js`, bạn phải vào `chrome://extensions/`, bấm nút **Tải lại (Refresh)** ở Extension, sau đó **F5** lại tab web đang mở.
+- Google Chrome (hoặc Edge, Brave)
+- Node.js v16+
+- Deepgram API Key — đăng ký miễn phí tại [console.deepgram.com](https://console.deepgram.com/)
 
+---
 
+## 🚀 Cài đặt & Chạy
+
+### Bước 1 — Khởi động Server
+
+```bash
+cd translate-extension/translator-server
+npm install
+```
+
+Tạo file `.env` cùng thư mục với `server.js`:
+
+```env
+DEEPGRAM_API_KEY=your_api_key_here
+PORT=3000
+```
+
+```bash
+node server.js
+# Terminal báo: Server đang chạy tại ws://localhost:3000 → OK
+```
+
+### Bước 2 — Load Extension lên Chrome
+
+1. Mở `chrome://extensions/`
+2. Bật **Developer mode** (góc trên phải)
+3. Bấm **Load unpacked** → chọn thư mục `translate-extension/translator-extension/`
+4. Pin extension ra toolbar để tiện dùng
+
+### Bước 3 — Sử dụng
+
+1. Đảm bảo server đang chạy
+2. Mở tab muốn dịch (YouTube, Meet...)
+3. Bấm icon extension → chọn ngôn ngữ → bấm **Bắt đầu**
+4. Transcript + bản dịch hiện trong popup theo thời gian thực
+5. Bấm **Dừng** khi xong
+
+---
+
+## 🛠️ Cấu trúc thư mục
+
+```
+translate-extension/
+├── translator-extension/        # Chrome Extension
+│   ├── background.js            # Service worker — điều phối state & routing
+│   ├── content.js               # Content script (injected vào page)
+│   ├── offscreen.js / .html     # Audio pipeline (bypass MV3 limitation)
+│   ├── processor.js             # AudioWorklet — convert Float32 → PCM16
+│   ├── manifest.json
+│   ├── style.css
+│   ├── popup/                   # ← Build output (commit, đừng xóa)
+│   │   └── index.html + assets/
+│   └── popup-src/               # ← Vue source của popup UI
+│       └── src/App.vue
+│
+└── translator-server/           # Node.js Backend
+    ├── server.js
+    ├── package.json
+    └── .env                     # ← Tự tạo, KHÔNG commit
+```
+
+---
+
+## 👨‍💻 Dành cho Developer
+
+### Sửa UI popup
+
+Popup được build từ Vue (`popup-src/`). Sau khi sửa `App.vue`:
+
+```bash
+cd translate-extension/translator-extension/popup-src
+npm install       # lần đầu
+npm run build     # build ra popup/
+```
+
+Sau đó reload extension tại `chrome://extensions/`.
+
+### Sửa extension logic (background, offscreen, content)
+
+Sửa file `.js` → vào `chrome://extensions/` → bấm **Reload** → F5 lại tab.
+
+---
+
+## ⚠️ Troubleshooting
+
+| Vấn đề | Giải pháp |
+|--------|-----------|
+| Popup không hiện text | Kiểm tra server đang chạy. Xem Console của background script tại `chrome://extensions/ → Service Worker` |
+| Lỗi `Connection refused` | Server chưa chạy hoặc PORT không khớp (default: 3000) |
+| API Key lỗi | Kiểm tra `.env` — key đúng format, còn credit tại Deepgram Console |
+| Sửa code không có hiệu lực | Reload extension tại `chrome://extensions/`, sau đó F5 lại tab |
+| `popup/` bị mất sau pull | Chạy lại `npm run build` trong `popup-src/` |

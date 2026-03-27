@@ -1,0 +1,24 @@
+{
+  "app": {
+    "name": "VoxaBridge"
+  },
+  "lang": {
+    "source": "Ngôn ngữ nói",
+    "target": "Dịch sang"
+  },
+  "languages": {
+    "en": "Tiếng Anh",
+    "vi": "Tiếng Việt",
+    "ja": "Tiếng Nhật",
+    "ko": "Tiếng Hàn",
+    "zh": "Tiếng Trung"
+  },
+  "status": {
+    "idle": "Sẵn sàng",
+    "active": "Đang dịch"
+  },
+  "btn": {
+    "start": "Bắt đầu dịch",
+    "stop": "Dừng lại"
+  }
+}
